@@ -6,3 +6,10 @@ export type Question = {
 };
 
 export type QuizState = "playing" | "finished";
+
+export type WrongAnswer = {
+  questionNumber: number;
+  questionText: string;
+  selectedAnswer: string;
+  correctAnswer: string;
+};

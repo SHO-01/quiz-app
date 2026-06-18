@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { questions } from "@/data/questions";
-import type { QuizState } from "@/types/quiz";
+import type { QuizState, WrongAnswer } from "@/types/quiz";
 import QuestionCard from "./QuestionCard";
 import ResultScreen from "./ResultScreen";
 
@@ -10,6 +10,7 @@ export default function Quiz() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [score, setScore] = useState(0);
+  const [wrongAnswers, setWrongAnswers] = useState<WrongAnswer[]>([]);
   const [quizState, setQuizState] = useState<QuizState>("playing");
 
   const currentQuestion = questions[currentIndex];
@@ -19,19 +20,36 @@ export default function Quiz() {
     setSelectedIndex(index);
   };
 
+  const recordAnswer = (isCorrect: boolean) => {
+    if (isCorrect || selectedIndex === null) return wrongAnswers;
+
+    return [
+      ...wrongAnswers,
+      {
+        questionNumber: currentIndex + 1,
+        questionText: currentQuestion.text,
+        selectedAnswer: currentQuestion.choices[selectedIndex],
+        correctAnswer: currentQuestion.choices[currentQuestion.correctIndex],
+      },
+    ];
+  };
+
   const handleNext = () => {
     if (selectedIndex === null) return;
 
     const isCorrect = selectedIndex === currentQuestion.correctIndex;
     const nextScore = isCorrect ? score + 1 : score;
+    const nextWrongAnswers = recordAnswer(isCorrect);
 
     if (isLastQuestion) {
       setScore(nextScore);
+      setWrongAnswers(nextWrongAnswers);
       setQuizState("finished");
       return;
     }
 
     setScore(nextScore);
+    setWrongAnswers(nextWrongAnswers);
     setCurrentIndex((prev) => prev + 1);
     setSelectedIndex(null);
   };
@@ -40,6 +58,7 @@ export default function Quiz() {
     setCurrentIndex(0);
     setSelectedIndex(null);
     setScore(0);
+    setWrongAnswers([]);
     setQuizState("playing");
   };
 
@@ -48,6 +67,7 @@ export default function Quiz() {
       <ResultScreen
         score={score}
         totalQuestions={questions.length}
+        wrongAnswers={wrongAnswers}
         onRestart={handleRestart}
       />
     );
